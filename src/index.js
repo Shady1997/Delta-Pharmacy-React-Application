@@ -10,20 +10,20 @@ import { ToastProvider } from './context/ToastContext';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
-  <React.StrictMode>
-    <BrowserRouter
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true
-      }}
-    >
-      <AuthProvider>
-        <CartProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
-        </CartProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+  // Remove <React.StrictMode>
+  <BrowserRouter
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true
+    }}
+  >
+    <AuthProvider>
+      <CartProvider>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </CartProvider>
+    </AuthProvider>
+  </BrowserRouter>
+  // Remove </React.StrictMode>
 );

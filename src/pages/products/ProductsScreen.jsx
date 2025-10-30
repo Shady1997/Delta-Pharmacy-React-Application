@@ -7,7 +7,7 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import { Plus, ShoppingCart, Edit, Trash2, Search, X } from 'lucide-react';
+import { Plus, ShoppingCart, Edit, Trash2, Search, X, Package, TrendingUp, AlertCircle } from 'lucide-react';
 
 const ProductsScreen = () => {
   const { user } = useAuth();
@@ -145,6 +145,12 @@ const ProductsScreen = () => {
     product.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getStockIcon = (stockQuantity) => {
+    if (stockQuantity > 50) return <Package className="text-green-600" size={20} />;
+    if (stockQuantity > 10) return <TrendingUp className="text-yellow-600" size={20} />;
+    return <AlertCircle className="text-red-600" size={20} />;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -172,50 +178,86 @@ const ProductsScreen = () => {
           placeholder="Search products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
-          <Card key={product.id} className="overflow-hidden">
-            {product.imageUrl && (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-full h-48 object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            )}
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+        {filteredProducts.map((product, index) => (
+          <div
+            key={product.id}
+            className="group relative bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden animate-fadeIn"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            {/* Image Container with Gradient Overlay */}
+            <div className="relative h-48 bg-gradient-to-br from-blue-50 to-purple-50 overflow-hidden">
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div className="absolute inset-0 flex items-center justify-center" style={{ display: product.imageUrl ? 'none' : 'flex' }}>
+                <Package className="text-gray-300" size={64} />
+              </div>
+              
+              {/* Stock Badge */}
+              <div className="absolute top-3 right-3">
+                <div className={`flex items-center gap-1 px-3 py-1 rounded-full backdrop-blur-sm ${
+                  product.stockQuantity > 50
+                    ? 'bg-green-100/90 text-green-800'
+                    : product.stockQuantity > 10
+                    ? 'bg-yellow-100/90 text-yellow-800'
+                    : 'bg-red-100/90 text-red-800'
+                }`}>
+                  {getStockIcon(product.stockQuantity)}
+                  <span className="text-xs font-semibold">{product.stockQuantity}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-5">
+              <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
                 {product.name}
               </h3>
               <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                 {product.description}
               </p>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-2xl font-bold text-blue-600">
+              
+              {/* Category & Manufacturer */}
+              <div className="flex gap-2 mb-3">
+                {product.category && (
+                  <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+                    {product.category}
+                  </span>
+                )}
+                {product.manufacturer && (
+                  <span className="px-2 py-1 bg-purple-50 text-purple-700 text-xs rounded-full">
+                    {product.manufacturer}
+                  </span>
+                )}
+              </div>
+
+              {/* Price */}
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-blue-600">
                   ${product.price?.toFixed(2)}
-                </span>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  product.stockQuantity > 10
-                    ? 'bg-green-100 text-green-800'
-                    : product.stockQuantity > 0
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  Stock: {product.stockQuantity}
                 </span>
               </div>
               
+              {/* Actions */}
               <div className="flex gap-2">
                 {product.stockQuantity > 0 && !isAdmin && (
                   <Button
                     fullWidth
                     onClick={() => handleAddToCart(product)}
+                    className="group-hover:shadow-lg transition-shadow"
                   >
                     <ShoppingCart size={18} className="mr-2" />
                     Add to Cart
@@ -241,12 +283,16 @@ const ProductsScreen = () => {
                 )}
               </div>
             </div>
-          </Card>
+
+            {/* Hover Border Effect */}
+            <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-400 rounded-xl pointer-events-none transition-all duration-300"></div>
+          </div>
         ))}
       </div>
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-12">
+          <Package className="mx-auto text-gray-300 mb-4" size={64} />
           <p className="text-gray-500 text-lg">
             {searchTerm ? 'No products found matching your search' : 'No products found'}
           </p>
@@ -255,8 +301,8 @@ const ProductsScreen = () => {
 
       {/* Add/Edit Product Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-800">
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
